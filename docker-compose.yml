@@ -1,0 +1,91 @@
+version: '3.7'
+
+services:
+    mongodb1:
+        image: 'mongo'
+        container_name: 'mongodb1'
+        hostname: mongodb1
+        env_file:
+            - .env
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+        volumes:
+            - ./resource/mongodb/rs1/:/tmp
+            - ./resource/mongod-keyfile:/etc/mongod-keyfile:ro
+        ports:
+            - '27017:27017'
+        expose:
+            - 27017    
+        networks:
+            - mongonetwork
+        command: [ "--auth", "--keyFile", "/etc/mongod-keyfile", "--bind_ip_all", "--replSet", "${MONGO_REPLICA_SET_NAME}" ]    
+    mongodb2:
+        image: 'mongo'
+        container_name: 'mongodb2'
+        hostname: mongodb2
+        env_file:
+            - .env
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+        volumes:
+            - ./resource/mongodb/rs2/:/tmp
+            - ./resource/mongod-keyfile:/etc/mongod-keyfile:ro
+        ports:
+            - '27018:27017'
+        expose:
+            - 27017    
+        networks:
+            - mongonetwork
+        command: [ "--auth", "--keyFile", "/etc/mongod-keyfile", "--bind_ip_all", "--replSet", "${MONGO_REPLICA_SET_NAME}" ]    
+    mongodb3:
+        image: 'mongo'
+        container_name: 'mongodb3'
+        hostname: mongodb3
+        env_file:
+            - .env
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+        volumes:
+            - ./resource/mongodb/rs3/:/tmp
+            - ./resource/mongod-keyfile:/etc/mongod-keyfile:ro
+        ports:
+            - '27019:27017'
+        expose:
+            - 27017
+        networks:
+            - mongonetwork
+        command: [ "--auth", "--keyFile", "/etc/mongod-keyfile", "--bind_ip_all", "--replSet", "${MONGO_REPLICA_SET_NAME}" ]    
+    mongo-express:
+        container_name: mongo_express_container
+        image: mongo-express
+        ports:
+            - 8081:8081
+        expose:
+            - 8081
+        env_file:
+            - .env
+        environment:
+            ME_CONFIG_MONGODB_SERVER: 'mongodb1'
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            ME_CONFIG_MONGODB_PORT: 27017
+            ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        links:
+            - mongodb1
+            - mongodb2
+            - mongodb3
+        networks:
+            - mongonetwork
+        depends_on:
+            - mongodb1
+            - mongodb2
+            - mongodb3
+networks:
+  mongonetwork:
